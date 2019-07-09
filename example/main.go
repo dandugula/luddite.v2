@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/SpirentOrion/luddite.v2"
 )
 
+//Config holds the configuration parameters.
 type Config struct {
 	Service luddite.ServiceConfig
 }
@@ -36,7 +38,25 @@ func main() {
 		panic(err)
 	}
 
-	s.AddResource(1, "/users", newUserResource())
+	users := []User{
+		{Name: "Chaitanya", Password: "Spirent"},
+		{Name: "Robert", Password: "Vadra"},
+		{Name: "Bill", Password: "Gates"},
+		{Name: "Rob", Password: "Pike"},
+		{Name: "Larry", Password: "Wall"},
+		{Name: "Drew", Password: "Barrymore"},
+	}
+	ur := newUserResource()
+	s.AddResource(1, "/users", ur)
+	req, _ := http.NewRequest("POST", "/users", nil)
+	//req.Header.Set(luddite.HeaderContentType, luddite.ContentTypeJson)
+
+	for _, user := range users {
+		ret, _ := ur.Create(req, &user)
+		if ret != http.StatusCreated {
+			panic("User creation failed")
+		}
+	}
 
 	if err := s.Run(); err != nil {
 		panic(err)
